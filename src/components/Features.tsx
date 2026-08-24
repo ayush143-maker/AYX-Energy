@@ -33,11 +33,14 @@ function Counter({
   );
 }
 
-const stats = [
-  { type: 'counter' as const, value: 180, suffix: ' MG', label: 'Caffeine', code: 'S-01' },
-  { type: 'counter' as const, value: 0, suffix: '%', label: 'Distraction', code: 'S-02' },
-  { type: 'static' as const, value: '24/7', suffix: '', label: 'Momentum', code: 'S-03' },
-  { type: 'static' as const, value: '01', suffix: '', label: 'Mission', code: 'S-04' },
+const stats: Array<
+  | { type: 'counter'; value: number; suffix: string; label: string; code: string }
+  | { type: 'static'; value: string; suffix: string; label: string; code: string }
+> = [
+  { type: 'counter', value: 180, suffix: ' MG', label: 'Caffeine', code: 'S-01' },
+  { type: 'counter', value: 0, suffix: '%', label: 'Distraction', code: 'S-02' },
+  { type: 'static', value: '24/7', suffix: '', label: 'Momentum', code: 'S-03' },
+  { type: 'static', value: '01', suffix: '', label: 'Mission', code: 'S-04' },
 ];
 
 export default function Features() {
