@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-const cachedMaps: Record<string, { map: THREE.CanvasTexture; droplets: THREE.CanvasTexture; normal: THREE.CanvasTexture }> = {};
+const cachedMaps: Record<string, THREE.CanvasTexture> = {};
 
 function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -9,71 +9,73 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   canvas.height = 1024;
   const ctx = canvas.getContext('2d')!;
 
-  // Base satin aluminum color
-  ctx.fillStyle = '#F9FAFB';
+  // Base matte white printed surface
+  ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, 2048, 1024);
 
-  // Subtle metallic vertical streaks
-  for (let i = 0; i < 150; i++) {
-    const x = Math.random() * 2048;
-    const w = Math.random() * 3 + 0.5;
-    ctx.fillStyle = `rgba(200,210,220,${Math.random() * 0.06})`;
-    ctx.fillRect(x, 0, w, 1024);
-  }
+  // Signature horizontal wrap lines (Top and Bottom)
+  ctx.fillStyle = '#111111';
+  ctx.fillRect(0, 120, 2048, 4);
+  ctx.fillRect(0, 900, 2048, 4);
+  
+  // Accent line
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, 124, 2048, 1);
+  ctx.fillRect(0, 899, 2048, 1);
 
-  // --- LAYOUT MAPPING ---
-  // 0-512px: Left Side | 512-1024px: Front | 1024-1536px: Right Side | 1536-2048px: Back
+  /* 
+    UV MAPPING LAYOUT (2048px wide):
+    0-512px: Left Side
+    512-1024px: Front
+    1024-1536px: Right Side
+    1536-2048px: Back
+  */
 
-  // Front (512 - 1024)
+  // --- FRONT (512 - 1024) ---
   const frontCx = 768;
   ctx.textAlign = 'center';
 
   // AYX Logo
   ctx.fillStyle = '#111111';
-  ctx.font = '900 260px Inter, sans-serif';
-  ctx.fillText('AYX', frontCx, 400);
+  ctx.font = '900 220px Inter, sans-serif';
+  ctx.fillText('AYX', frontCx, 380);
 
   // Subtitle
-  ctx.font = '600 42px Inter, sans-serif';
-  ctx.fillText('ENERGY DRINK', frontCx, 460);
+  ctx.font = '600 36px Inter, sans-serif';
+  ctx.fillText('ENERGY DRINK', frontCx, 440);
 
   // Accent Line
   ctx.fillStyle = accent;
-  ctx.fillRect(frontCx - 60, 490, 120, 4);
+  ctx.fillRect(frontCx - 60, 470, 120, 4);
 
   // Variant
   ctx.fillStyle = accent;
-  ctx.font = '700 38px Inter, sans-serif';
-  ctx.fillText(variant, frontCx, 540);
+  ctx.font = '700 34px Inter, sans-serif';
+  ctx.fillText(variant, frontCx, 520);
 
-  // Features (Simulated icons + text)
+  // Features
   ctx.fillStyle = '#111111';
-  ctx.font = '600 24px Inter, sans-serif';
+  ctx.font = '600 22px Inter, sans-serif';
   const features = ['180 MG CAFFEINE', 'TAURINE', 'B VITAMINS'];
   features.forEach((f, i) => {
-    const y = 620 + i * 40;
-    // Simple geometric icon
-    ctx.strokeStyle = '#111111';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(frontCx - 120, y - 20, 16, 16);
-    ctx.fillText(f, frontCx - 90, y - 5);
+    ctx.fillText(f, frontCx, 600 + i * 35);
   });
 
   // Tagline
-  ctx.font = '500 20px Inter, sans-serif';
+  ctx.font = '500 18px Inter, sans-serif';
   ctx.fillStyle = '#6B7280';
-  ctx.fillText('FOCUS / DRIVE / MOMENTUM', frontCx, 770);
+  ctx.fillText('FOCUS / DRIVE / MOMENTUM', frontCx, 750);
 
   // Bottom Info
-  ctx.font = '600 28px Inter, sans-serif';
+  ctx.font = '600 24px Inter, sans-serif';
   ctx.fillStyle = '#111111';
-  ctx.fillText('330 ML', frontCx, 850);
-  ctx.font = '400 16px Inter, sans-serif';
+  ctx.fillText('330 ML', frontCx, 830);
+  ctx.font = '400 14px Inter, sans-serif';
   ctx.fillStyle = '#6B7280';
-  ctx.fillText('CAFFEINATED ENERGY DRINK', frontCx, 880);
-  ctx.fillText('AYX-01', frontCx, 910);
+  ctx.fillText('CAFFEINATED ENERGY DRINK', frontCx, 860);
+  ctx.fillText('AYX-01', frontCx, 880);
 
-  // Right Side (1024 - 1536)
+  // --- RIGHT SIDE (1024 - 1536) ---
   const rightCx = 1280;
   ctx.fillStyle = '#111111';
   ctx.font = '600 24px Inter, sans-serif';
@@ -88,7 +90,7 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   ctx.fillText('MOMENTUM', rightCx, 560);
   ctx.fillText('KEEP MOVING', rightCx, 590);
 
-  // Barcode (Right Side bottom)
+  // Barcode
   ctx.fillStyle = '#000000';
   let barX = rightCx - 80;
   for(let i = 0; i < 50; i++) {
@@ -100,7 +102,7 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   ctx.font = '400 14px Inter, sans-serif';
   ctx.fillText('8 901234 567890', rightCx, 810);
 
-  // Back (1536 - 2048)
+  // --- BACK (1536 - 2048) ---
   const backCx = 1792;
   ctx.fillStyle = '#111111';
   ctx.font = '700 32px Inter, sans-serif';
@@ -121,7 +123,6 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   ctx.font = '400 18px Inter, sans-serif';
   const nutrition = [
     'Serving Size 1 can (330ml)',
-    'Servings Per Container 1',
     'Calories 120',
     'Total Fat 0g',
     'Sodium 60mg',
@@ -148,7 +149,7 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   ];
   ingredients.forEach((line, i) => ctx.fillText(line, backCx - 180, 650 + i * 22));
 
-  // Recycling Symbol (Back)
+  // Recycling Symbol
   ctx.strokeStyle = '#111111';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -160,7 +161,7 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   ctx.textAlign = 'center';
   ctx.fillText('ALU', backCx + 140, 770);
 
-  // Left Side (0 - 512)
+  // --- LEFT SIDE (0 - 512) ---
   ctx.textAlign = 'center';
   const leftCx = 256;
   ctx.fillStyle = '#111111';
@@ -181,74 +182,27 @@ function drawLabel(variant: string, accent: string): THREE.CanvasTexture {
   return texture;
 }
 
-// Generates the water droplet normal and roughness maps
-function drawDroplets(): { droplets: THREE.CanvasTexture; normal: THREE.CanvasTexture } {
-  const size = 1024;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  // Roughness map: White = rough (0), Black = smooth (1). 
-  // Base is gray (semi-rough), droplets are black (glossy/wet)
-  ctx.fillStyle = '#666666'; 
-  ctx.fillRect(0, 0, size, size);
-
-  // Draw droplets
-  for (let i = 0; i < 600; i++) {
-    const x = Math.random() * size;
-    const y = Math.random() * size;
-    const r = Math.random() * 8 + 1;
-    
-    // Gradient for smooth droplet edge
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-    grad.addColorStop(0, '#000000');
-    grad.addColorStop(0.7, '#000000');
-    grad.addColorStop(1, '#666666');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  const dropletTex = new THREE.CanvasTexture(canvas);
-  dropletTex.wrapS = THREE.RepeatWrapping;
-  dropletTex.wrapT = THREE.RepeatWrapping;
-  dropletTex.repeat.set(2, 2);
-
-  // For simplicity in R3F, we reuse the droplet texture as a bump/normal map
-  // by using it in the normalMap slot, which gives physical bumps.
-  return { droplets: dropletTex, normal: dropletTex };
-}
-
 export function useCanTexture(variant: string, accent: string) {
-  const [textures, setTextures] = useState(cachedMaps[variant] || null);
+  const [map, setMap] = useState<THREE.CanvasTexture | null>(cachedMaps[variant] || null);
 
   useEffect(() => {
     if (cachedMaps[variant]) {
-      setTextures(cachedMaps[variant]);
+      setMap(cachedMaps[variant]);
       return;
     }
 
     let mounted = true;
     const build = () => {
       if (!mounted) return;
-      const map = drawLabel(variant, accent);
-      const droplets = drawDroplets();
-      cachedMaps[variant] = { map, droplets: droplets.droplets, normal: droplets.normal };
-      setTextures(cachedMaps[variant]);
+      const tex = drawLabel(variant, accent);
+      cachedMaps[variant] = tex;
+      setMap(tex);
     };
 
-    // Immediate build
     build();
 
-    // Rebuild when fonts are ready
-    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(build).catch(build);
-    }
-    
     return () => { mounted = false; };
   }, [variant, accent]);
 
-  return textures;
+  return map;
 }
