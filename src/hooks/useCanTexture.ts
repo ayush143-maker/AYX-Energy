@@ -1,47 +1,65 @@
 import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-let cachedMap: THREE.CanvasTexture | null = null;
+const cachedMaps: Record<string, THREE.CanvasTexture> = {};
 
-function createCanTexture(): THREE.CanvasTexture {
+function createCanTexture(variant: string, accent: string): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 2048;
   canvas.height = 1024;
   const ctx = canvas.getContext('2d')!;
 
-  // Base color matches the can material
-  ctx.fillStyle = '#F7F7F5';
+  // Base satin aluminum color
+  ctx.fillStyle = '#F9FAFB';
   ctx.fillRect(0, 0, 2048, 1024);
 
-  // Draw the logo layout in the center of the texture (which maps to the front face)
+  // Subtle vertical metallic streaks
+  for (let i = 0; i < 100; i++) {
+    const x = Math.random() * 2048;
+    const w = Math.random() * 3 + 0.5;
+    ctx.fillStyle = `rgba(200,210,220,${Math.random() * 0.05})`;
+    ctx.fillRect(x, 0, w, 1024);
+  }
+
+  // Signature horizontal wrap lines (Top and Bottom)
+  ctx.fillStyle = accent;
+  ctx.globalAlpha = 0.8;
+  ctx.fillRect(0, 150, 2048, 2);
+  ctx.fillRect(0, 872, 2048, 2);
+  ctx.globalAlpha = 0.2;
+  ctx.fillRect(0, 156, 2048, 1);
+  ctx.fillRect(0, 866, 2048, 1);
+  ctx.globalAlpha = 1;
+
+  // Center branding block
   const centerX = 1024;
-  const centerY = 500;
+  const centerY = 460;
 
   ctx.textAlign = 'center';
 
   // AYX Logo
   ctx.fillStyle = '#111111';
-  ctx.font = '900 220px Inter, sans-serif';
+  ctx.font = '900 240px Inter, sans-serif';
   ctx.fillText('AYX', centerX, centerY);
 
   // Subtitle
   ctx.fillStyle = '#111111';
-  ctx.font = '600 40px Inter, sans-serif';
-  ctx.fillText('ENERGY DRINK', centerX, centerY + 60);
+  ctx.font = '600 42px Inter, sans-serif';
+  ctx.fillText('ENERGY DRINK', centerX, centerY + 65);
 
   // Accent Line
-  ctx.fillStyle = '#0047FF';
-  ctx.fillRect(centerX - 60, centerY + 90, 120, 3);
+  ctx.fillStyle = accent;
+  ctx.fillRect(centerX - 60, centerY + 95, 120, 3);
 
   // Variant
-  ctx.fillStyle = '#0047FF';
-  ctx.font = '700 36px Inter, sans-serif';
-  ctx.fillText('ORIGINAL', centerX, centerY + 140);
+  ctx.fillStyle = accent;
+  ctx.font = '700 38px Inter, sans-serif';
+  ctx.fillText(variant, centerX, centerY + 145);
 
-  // Volume (Small, bottom of center)
+  // Volume
   ctx.fillStyle = '#6B7280';
-  ctx.font = '500 24px Inter, sans-serif';
-  ctx.fillText('330 ML', centerX, centerY + 190);
+  ctx.font = '500 26px Inter, sans-serif';
+  ctx.fillText('330 ML', centerX, centerY + 195);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
@@ -50,17 +68,21 @@ function createCanTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-export function useCanTexture() {
-  const [textures, setTextures] = useState<{ map: THREE.CanvasTexture | null }>({ map: cachedMap });
+export function useCanTexture(variant: string, accent: string) {
+  const [map, setMap] = useState<THREE.CanvasTexture | null>(cachedMaps[variant] || null);
 
   useEffect(() => {
-    if (cachedMap) return;
-    
+    if (cachedMaps[variant]) {
+      setMap(cachedMaps[variant]);
+      return;
+    }
+
     let mounted = true;
     const build = () => {
       if (!mounted) return;
-      cachedMap = createCanTexture();
-      setTextures({ map: cachedMap });
+      const tex = createCanTexture(variant, accent);
+      cachedMaps[variant] = tex;
+      setMap(tex);
     };
 
     if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
@@ -71,7 +93,7 @@ export function useCanTexture() {
     }
     
     return () => { mounted = false; };
-  }, []);
+  }, [variant, accent]);
 
-  return textures;
+  return map;
 }
