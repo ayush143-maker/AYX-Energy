@@ -1,17 +1,7 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import HeroCanvas from './three/HeroCanvas';
-import { useState } from 'react';
-
-const quadrants = [
-  { id: 0, label: 'ORIGINAL', desc: 'Clean energy for the next move.' },
-  { id: 1, label: '330 ML', desc: 'Precision-sized for momentum.' },
-  { id: 2, label: 'FOCUS / DRIVE / ENERGY', desc: 'Designed around a simple idea: keep moving.' },
-  { id: 3, label: 'ENERGY, REFINED.', desc: 'Nothing unnecessary.' },
-];
 
 export default function Hero() {
-  const [quad, setQuad] = useState(0);
-
   return (
     <section id="top" className="relative min-h-[100svh] w-full overflow-hidden flex items-center pt-24 pb-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
@@ -59,7 +49,7 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right: 3D Can + Dynamic Text */}
+          {/* Right: 3D Can + Static Editorial Text */}
           <div className="order-1 lg:order-2 lg:col-span-7 relative h-[45vh] sm:h-[55vh] lg:h-[80vh] min-h-[380px] flex flex-col items-center justify-center">
             
             <div className="lg:hidden mb-4 text-center">
@@ -67,43 +57,24 @@ export default function Hero() {
             </div>
 
             <div className="relative w-full h-full flex items-center justify-center">
-              <HeroCanvas onQuadrantChange={setQuad} />
+              <HeroCanvas />
               
-              {/* Dynamic Editorial Text */}
+              {/* Static Editorial Text */}
               <div className="absolute top-1/2 right-0 lg:right-12 -translate-y-1/2 hidden sm:block w-48 text-left pointer-events-none">
-                <AnimatePresence mode="wait">
-                  <motion.div 
-                    key={quad}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <div className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent mb-1">
-                      {quadrants[quad].label}
-                    </div>
-                    <div className="text-sm text-ayx-muted leading-relaxed border-l border-ayx-line pl-3">
-                      {quadrants[quad].desc}
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent mb-1">
+                  ORIGINAL
+                </div>
+                <div className="text-sm text-ayx-muted leading-relaxed border-l border-ayx-line pl-3">
+                  Clean energy for the next move.
+                </div>
               </div>
             </div>
 
-            {/* Mobile Dynamic Text */}
+            {/* Mobile Static Text */}
             <div className="sm:hidden absolute bottom-2 left-0 right-0 text-center pointer-events-none">
-              <AnimatePresence mode="wait">
-                <motion.div 
-                  key={quad}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent"
-                >
-                  {quadrants[quad].label} — {quadrants[quad].desc}
-                </motion.div>
-              </AnimatePresence>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent">
+                ORIGINAL — Clean energy for the next move.
+              </div>
             </div>
 
           </div>
