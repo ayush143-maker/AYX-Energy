@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Scene from './Scene';
 import CanFallback from './CanFallback';
 import { useQuality } from '../../hooks/useQuality';
+import ErrorBoundary from '../ErrorBoundary';
 
 export default function HeroCanvas() {
   const [webglOk, setWebglOk] = useState(true);
@@ -21,22 +22,24 @@ export default function HeroCanvas() {
   if (!webglOk) return <CanFallback />;
 
   return (
-    <Canvas
-      camera={{ position: [0, 0, 6.5], fov: 32 }}
-      dpr={quality === 'low' ? [1, 1.25] : [1, 2]}
-      gl={{
-        antialias: quality !== 'low',
-        alpha: true,
-        powerPreference: 'high-performance',
-        stencil: false,
-        depth: true,
-      }}
-      className="!absolute inset-0"
-      style={{ touchAction: 'none' }}
-    >
-      <Suspense fallback={null}>
-        <Scene quality={quality} />
-      </Suspense>
-    </Canvas>
+    <ErrorBoundary fallback={<CanFallback />}>
+      <Canvas
+        camera={{ position: [0, 0, 6.5], fov: 32 }}
+        dpr={quality === 'low' ? [1, 1.25] : [1, 2]}
+        gl={{
+          antialias: quality !== 'low',
+          alpha: true,
+          powerPreference: 'high-performance',
+          stencil: false,
+          depth: true,
+        }}
+        className="!absolute inset-0"
+        style={{ touchAction: 'none' }}
+      >
+        <Suspense fallback={null}>
+          <Scene quality={quality} />
+        </Suspense>
+      </Canvas>
+    </ErrorBoundary>
   );
 }
