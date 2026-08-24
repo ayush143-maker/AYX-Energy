@@ -55,7 +55,7 @@ export default function ShowcaseCanvas({ scrollRotation }: Props) {
             className="!absolute inset-0"
           >
             <Suspense fallback={null}>
-              <Scene quality={quality} scrollRotation={scrollRotation} autoRotate={false} />
+              <Scene quality={quality} scrollRotation={scrollRotation} />
             </Suspense>
           </Canvas>
         </ErrorBoundary>
