@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MotionValue } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
@@ -40,15 +40,15 @@ export default function EnergyCan({
     return pts;
   }, []);
 
-  // Event handlers for drag
-  const onPointerDown = (e: React.PointerEvent) => {
+  // Event handlers for drag (using 'any' to bypass R3F strict TS event types)
+  const onPointerDown = (e: any) => {
     if (!isInteractive || scrollRotation) return;
     isDragging.current = true;
     prevPointer.current = { x: e.clientX, y: e.clientY };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.target.setPointerCapture(e.pointerId);
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
+  const onPointerMove = (e: any) => {
     if (!isDragging.current || !groupRef.current) return;
     const deltaX = e.clientX - prevPointer.current.x;
     velocity.current = deltaX * 0.01;
@@ -56,9 +56,9 @@ export default function EnergyCan({
     prevPointer.current = { x: e.clientX, y: e.clientY };
   };
 
-  const onPointerUp = (e: React.PointerEvent) => {
+  const onPointerUp = (e: any) => {
     isDragging.current = false;
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    e.target.releasePointerCapture(e.pointerId);
   };
 
   useFrame((_, delta) => {
