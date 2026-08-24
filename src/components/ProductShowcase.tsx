@@ -38,6 +38,13 @@ export default function ProductShowcase() {
   // Can scale
   const canScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.92, 1, 1.08]);
 
+  // Top label opacity
+  const topOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
+
+  // Progress bar
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0vw', '12vw']);
+  const progressText = useTransform(scrollYProgress, (v) => `${Math.round(v * 360)}°`);
+
   return (
     <section id="product" ref={ref} className="relative h-[220vh] sm:h-[200vh]">
       <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center">
@@ -68,8 +75,7 @@ export default function ProductShowcase() {
 
         {/* Top label */}
         <motion.div
-          initial={{ opacity: 0 }}
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]) }}
+          style={{ opacity: topOpacity }}
           className="absolute top-24 sm:top-28 left-1/2 -translate-x-1/2 text-center"
         >
           <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.35em] text-ayx-cyan">
@@ -96,10 +102,10 @@ export default function ProductShowcase() {
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3">
           <motion.div
             className="h-px bg-ayx-cyan/60"
-            style={{ width: useTransform(scrollYProgress, [0, 1], ['0vw', '12vw']) }}
+            style={{ width: progressWidth }}
           />
           <span className="text-[9px] font-mono uppercase tracking-[0.3em] text-ayx-steel/50">
-            <motion.span>{useTransform(scrollYProgress, (v) => `${Math.round(v * 360)}°`)}</motion.span>
+            <motion.span>{progressText}</motion.span>
           </span>
         </div>
       </div>
