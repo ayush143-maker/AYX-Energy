@@ -5,7 +5,11 @@ import CanFallback from './CanFallback';
 import { useQuality } from '../../hooks/useQuality';
 import ErrorBoundary from '../ErrorBoundary';
 
-export default function HeroCanvas() {
+interface Props {
+  onQuadrantChange?: (q: number) => void;
+}
+
+export default function HeroCanvas({ onQuadrantChange }: Props) {
   const [webglOk, setWebglOk] = useState(true);
   const quality = useQuality();
 
@@ -24,7 +28,7 @@ export default function HeroCanvas() {
   return (
     <ErrorBoundary fallback={<CanFallback />}>
       <Canvas
-        camera={{ position: [0, 0, 6.5], fov: 32 }}
+        camera={{ position: [0, 0, 5.5], fov: 35 }}
         dpr={quality === 'low' ? [1, 1.25] : [1, 2]}
         gl={{
           antialias: quality !== 'low',
@@ -37,7 +41,7 @@ export default function HeroCanvas() {
         style={{ touchAction: 'none' }}
       >
         <Suspense fallback={null}>
-          <Scene quality={quality} />
+          <Scene quality={quality} onQuadrantChange={onQuadrantChange} />
         </Suspense>
       </Canvas>
     </ErrorBoundary>
