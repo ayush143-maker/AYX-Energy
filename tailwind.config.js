@@ -5,26 +5,16 @@ export default {
     extend: {
       colors: {
         ayx: {
-          black: '#02040a',
-          ink: '#060912',
-          surface: '#0a0f1c',
-          deep: '#050810',
-          cyan: '#00e6ff',
-          electric: '#22d3ee',
-          violet: '#7c5cff',
-          plasma: '#c026ff',
-          steel: '#9fb4cc',
-          silver: '#cfd8e3',
+          paper: '#F7F7F5',
+          white: '#FFFFFF',
+          ink: '#111111',
+          muted: '#6B7280',
+          line: '#E5E7EB',
+          accent: '#0047FF', // Clean electric blue
         },
       },
       fontFamily: {
-        display: ['Orbitron', 'system-ui', 'sans-serif'],
-        sans: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
-      },
-      animation: {
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'spin-slow': 'spin 30s linear infinite',
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
     },
   },
