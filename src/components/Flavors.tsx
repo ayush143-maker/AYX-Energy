@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
-import CanGraphic from './CanGraphic';
+import MiniCanCanvas from './three/MiniCanCanvas';
 
 const flavors = [
-  { code: 'AYX-01', name: 'ORIGINAL', subtitle: 'Classic Identity', desc: 'The signature AYX frequency. Bold, clean, ready for anything that comes next.', accent: '#0047FF', bg: '#F7F7F5' },
-  { code: 'AYX-02', name: 'PULSE', subtitle: 'Citrus / Electric', desc: 'A charged citrus current. Hits fast, runs clean, leaves no residue behind.', accent: '#6B7280', bg: '#F7F7F5' },
-  { code: 'AYX-03', name: 'VOID', subtitle: 'Berry / Darker', desc: 'A deeper signal for the long mission. Darker, slower, longer burn.', accent: '#111111', bg: '#F7F7F5' },
+  { code: 'AYX-01', name: 'ORIGINAL', subtitle: 'Classic Identity', desc: 'The signature AYX frequency. Bold, clean, ready for anything that comes next.', accent: '#0047FF', variant: 'ORIGINAL' },
+  { code: 'AYX-02', name: 'PULSE', subtitle: 'Citrus / Electric', desc: 'A charged citrus current. Hits fast, runs clean, leaves no residue behind.', accent: '#84CC16', variant: 'PULSE' },
+  { code: 'AYX-03', name: 'VOID', subtitle: 'Berry / Darker', desc: 'A deeper signal for the long mission. Darker, slower, longer burn.', accent: '#7C3AED', variant: 'VOID' },
 ];
 
 export default function Flavors() {
@@ -24,18 +24,21 @@ export default function Flavors() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Mobile: 1 column, Desktop: 3 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {flavors.map((f, i) => (
             <motion.div 
               key={f.code} 
               initial={{ opacity: 0, y: 30 }} 
               whileInView={{ opacity: 1, y: 0 }} 
-              viewport={{ once: true, amount: 0.2 }} 
+              viewport={{ once: true, amount: 0.1 }} 
               transition={{ duration: 0.6, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }} 
               className="group relative bg-ayx-white border border-ayx-line p-8 sm:p-10 flex flex-col items-center text-center transition-colors duration-500 hover:border-ayx-ink"
             >
+              
+              {/* Mini 3D Can Canvas */}
               <div className="relative flex justify-center mb-10 h-[320px] sm:h-[380px] items-center w-full">
-                <CanGraphic accent={f.accent} name={f.name} code={f.code} />
+                <MiniCanCanvas variant={f.variant} accent={f.accent} />
               </div>
 
               <div className="relative w-full border-t border-ayx-line pt-6">
