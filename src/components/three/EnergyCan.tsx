@@ -31,7 +31,7 @@ export default function EnergyCan({
   // Lathe Geometry for smooth can profile
   const points = useMemo(() => {
     const pts = [];
-    // Stop lathe before the top to make room for the steel rim
+    // Stop lathe before the top to make room for the sleek steel rim
     pts.push(new THREE.Vector2(0.0, -1.4)); // Center bottom
     pts.push(new THREE.Vector2(0.58, -1.4)); // Bottom edge
     pts.push(new THREE.Vector2(0.62, -1.35)); // Bottom curve
@@ -53,11 +53,12 @@ export default function EnergyCan({
       // State machine logic
       phaseTimer.current += delta;
       
-      if (phase === 0 && phaseTimer.current > 1.5) { // Faster hold front
+      // Much faster transitions
+      if (phase === 0 && phaseTimer.current > 0.8) { 
         setPhase(1); phaseTimer.current = 0;
-      } else if (phase === 1 && phaseTimer.current > 1.0) { // Faster tilt
+      } else if (phase === 1 && phaseTimer.current > 0.5) { 
         setPhase(2); phaseTimer.current = 0;
-      } else if (phase === 2 && phaseTimer.current > 4.0) { // Faster turn duration
+      } else if (phase === 2 && phaseTimer.current > 3.0) { 
         setPhase(0); phaseTimer.current = 0;
       }
 
@@ -71,21 +72,22 @@ export default function EnergyCan({
       } else if (phase === 1) {
         targetX = 0.08; targetZ = 0.12;
       } else if (phase === 2) {
-        // MUCH FASTER ROTATION
-        targetY += delta * 1.5; 
+        // 2.5x FASTER ROTATION
+        targetY += delta * 3.0; 
         targetX = 0.05; targetZ = 0.05;
       }
 
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.05);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetX, 0.05);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetZ, 0.05);
+      // Snappier lerp
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.1);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetX, 0.1);
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetZ, 0.1);
     }
 
     // Pointer influence (Desktop)
     if (isInteractive && !reduceMotion && Math.abs(touchVelocity.current) < 0.0001) {
       const targetY = mouse.x * 0.5 + groupRef.current.rotation.y;
       const targetX = -mouse.y * 0.15 + groupRef.current.rotation.x;
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetX, 0.02);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetX, 0.05);
     }
 
     // Quadrant calculation for dynamic text
@@ -116,15 +118,15 @@ export default function EnergyCan({
         />
       </mesh>
 
-      {/* Thin Steel Top Rim (The missing metallic ring) */}
+      {/* Sleek Thin Steel Top Rim (Red Bull style) */}
       <mesh position={[0, 1.36, 0]} castShadow>
-        <cylinderGeometry args={[0.525, 0.525, 0.06, 96, 1, false]} />
-        <meshStandardMaterial color="#D1D5DB" metalness={1.0} roughness={0.15} />
+        <cylinderGeometry args={[0.53, 0.53, 0.04, 96, 1, false]} />
+        <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.15} />
       </mesh>
 
       {/* Lid Top (Recessed Steel) */}
-      <mesh position={[0, 1.38, 0]} castShadow>
-        <cylinderGeometry args={[0.48, 0.48, 0.02, 96, 1, false]} />
+      <mesh position={[0, 1.385, 0]} castShadow>
+        <cylinderGeometry args={[0.48, 0.48, 0.015, 96, 1, false]} />
         <meshStandardMaterial color="#E5E7EB" metalness={0.9} roughness={0.2} />
       </mesh>
 
