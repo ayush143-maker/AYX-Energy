@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MotionValue } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
@@ -20,7 +20,7 @@ export default function EnergyCan({
 }: EnergyCanProps) {
   const groupRef = useRef<THREE.Group>(null);
   const reduceMotion = useReducedMotion();
-  const map = useCanTexture(variant, accent);
+  const textures = useCanTexture(variant, accent);
 
   // Drag state
   const isDragging = useRef(false);
@@ -30,17 +30,19 @@ export default function EnergyCan({
   // Lathe Geometry for smooth can profile
   const points = useMemo(() => {
     const pts = [];
+    // Bottom to Top (precise 330ml slim proportions)
     pts.push(new THREE.Vector2(0.0, -1.4)); // Center bottom
-    pts.push(new THREE.Vector2(0.58, -1.4)); // Bottom edge
-    pts.push(new THREE.Vector2(0.62, -1.35)); // Bottom curve
+    pts.push(new THREE.Vector2(0.58, -1.4)); // Bottom edge base
+    pts.push(new THREE.Vector2(0.62, -1.35)); // Bottom curve out
     pts.push(new THREE.Vector2(0.62, 1.15)); // Straight body
     pts.push(new THREE.Vector2(0.62, 1.2)); // Shoulder start
     pts.push(new THREE.Vector2(0.6, 1.3)); // Shoulder curve
     pts.push(new THREE.Vector2(0.52, 1.35)); // Neck start
+    pts.push(new THREE.Vector2(0.53, 1.38)); // Rim outer
+    pts.push(new THREE.Vector2(0.50, 1.39)); // Rim top
     return pts;
   }, []);
 
-  // Event handlers for drag (using 'any' to bypass R3F strict TS event types)
   const onPointerDown = (e: any) => {
     if (!isInteractive || scrollRotation) return;
     isDragging.current = true;
@@ -65,11 +67,9 @@ export default function EnergyCan({
     if (!groupRef.current) return;
 
     if (scrollRotation) {
-      // Scroll-driven mode (Showcase section)
       const targetY = scrollRotation.get();
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.1);
     } else if (!isDragging.current) {
-      // Idle drift + inertia (Hero section)
       if (Math.abs(velocity.current) > 0.0001) {
         groupRef.current.rotation.y += velocity.current;
         velocity.current *= 0.92; // friction
@@ -90,52 +90,61 @@ export default function EnergyCan({
       onPointerLeave={onPointerUp}
     >
       
-      {/* Main Body (Lathe Geometry) */}
+      {/* Main Body */}
       <mesh castShadow receiveShadow>
         <latheGeometry args={[points, 96]} />
         <meshStandardMaterial 
-          map={map || undefined}
-          color={map ? '#ffffff' : '#F9FAFB'}
-          metalness={0.4} 
-          roughness={0.5} 
+          map={textures?.map || undefined}
+          normalMap={textures?.normal || undefined}
+          roughnessMap={textures?.droplets || undefined}
+          color={textures ? '#ffffff' : '#F9FAFB'}
+          metalness={0.6} 
+          roughness={0.4} 
           side={THREE.DoubleSide}
+          envMapIntensity={1.5}
         />
       </mesh>
 
-      {/* Sleek Thin Steel Top Rim (Red Bull style) */}
+      {/* Inner Lid (Recessed) */}
+      <mesh position={[0, 1.375, 0]} castShadow>
+        <cylinderGeometry args={[0.48, 0.48, 0.015, 96, 1, false]} />
+        <meshStandardMaterial color="#E5E7EB" metalness={1.0} roughness={0.2} />
+      </mesh>
+
+      {/* Thin Steel Top Rim (Sleek) */}
       <mesh position={[0, 1.36, 0]} castShadow>
-        <cylinderGeometry args={[0.53, 0.53, 0.04, 96, 1, false]} />
+        <cylinderGeometry args={[0.51, 0.51, 0.02, 96, 1, false]} />
         <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.15} />
       </mesh>
 
-      {/* Lid Top (Recessed Steel) */}
-      <mesh position={[0, 1.385, 0]} castShadow>
-        <cylinderGeometry args={[0.48, 0.48, 0.015, 96, 1, false]} />
-        <meshStandardMaterial color="#E5E7EB" metalness={0.9} roughness={0.2} />
-      </mesh>
-
-      {/* Pull Tab Base */}
-      <mesh position={[0.15, 1.395, 0]} rotation={[0, 0, 0]} castShadow>
+      {/* Pull Tab Base Ring */}
+      <mesh position={[0.15, 1.385, 0]} rotation={[0, 0, 0]} castShadow>
         <torusGeometry args={[0.1, 0.015, 8, 24]} />
-        <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.2} />
+        <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.15} />
       </mesh>
 
-      {/* Pull Tab Ring */}
-      <mesh position={[0.15, 1.40, 0]} rotation={[Math.PI / 2 - 0.2, 0, 0]} castShadow>
+      {/* Pull Tab Ring (The finger loop) */}
+      <mesh position={[0.15, 1.39, 0]} rotation={[Math.PI / 2 - 0.3, 0, 0]} castShadow>
         <torusGeometry args={[0.08, 0.012, 8, 24]} />
-        <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.2} />
+        <meshStandardMaterial color="#E5E7EB" metalness={1.0} roughness={0.1} />
       </mesh>
 
       {/* Rivet */}
-      <mesh position={[0.15, 1.395, 0]}>
+      <mesh position={[0.15, 1.385, 0]}>
         <sphereGeometry args={[0.02, 12, 12]} />
         <meshStandardMaterial color="#6B7280" metalness={0.9} roughness={0.2} />
       </mesh>
 
-      {/* Inner Bottom (Dark inside) */}
-      <mesh position={[0, -1.39, 0]}>
-        <cylinderGeometry args={[0.57, 0.57, 0.02, 96, 1, false]} />
-        <meshStandardMaterial color="#111111" metalness={0.5} roughness={0.8} side={THREE.DoubleSide} />
+      {/* Inner Bottom (Deep curve) */}
+      <mesh position={[0, -1.38, 0]}>
+        <sphereGeometry args={[0.58, 64, 32, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} />
+        <meshStandardMaterial color="#9CA3AF" metalness={0.8} roughness={0.3} side={THREE.BackSide} />
+      </mesh>
+
+      {/* Outer Bottom Base */}
+      <mesh position={[0, -1.39, 0]} receiveShadow>
+        <cylinderGeometry args={[0.58, 0.58, 0.02, 96, 1, false]} />
+        <meshStandardMaterial color="#9CA3AF" metalness={0.8} roughness={0.3} />
       </mesh>
 
     </group>
