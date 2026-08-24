@@ -43,7 +43,7 @@ export default function ProductShowcase() {
 
   // Progress bar
   const progressWidth = useTransform(scrollYProgress, [0, 1], ['0vw', '12vw']);
-  const progressText = useTransform(scrollYProgress, (v) => `${Math.round(v * 360)}°`);
+  const progressText = useTransform(scrollYProgress, (v: number) => `${Math.round(v * 360)}°`);
 
   return (
     <section id="product" ref={ref} className="relative h-[220vh] sm:h-[200vh]">
