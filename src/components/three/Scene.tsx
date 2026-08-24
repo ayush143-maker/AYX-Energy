@@ -37,6 +37,7 @@ export default function Scene({ quality = 'high', scrollRotation = null }: Scene
       </mesh>
       
       <Preload all />
+    </>
   );
 }
 
