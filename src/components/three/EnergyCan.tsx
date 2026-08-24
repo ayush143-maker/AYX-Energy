@@ -65,7 +65,7 @@ export default function EnergyCan({
         <meshStandardMaterial
           map={map || undefined}
           emissiveMap={emissive || undefined}
-          emissive="#ffffff"
+          emissive={emissive ? '#ffffff' : '#000000'}
           emissiveIntensity={0.55}
           metalness={0.92}
           roughness={0.22}
