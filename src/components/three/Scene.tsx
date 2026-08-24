@@ -12,13 +12,14 @@ export default function Scene({ quality = 'high', scrollRotation = null }: Scene
     <>
       <AdaptiveDpr pixelated={false} />
 
-      {/* Soft, bright studio lighting */}
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
-      <spotLight position={[-5, 5, 5]} intensity={0.8} angle={0.5} penumbra={1} color="#ffffff" />
+      {/* Premium Studio Lighting */}
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[5, 8, 5]} intensity={2.0} color="#ffffff" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+      <spotLight position={[-5, 5, 5]} intensity={1.5} angle={0.4} penumbra={1} color="#ffffff" />
+      <pointLight position={[0, -2, 3]} intensity={0.5} color="#ffffff" />
       
-      {/* Clean environment for aluminum reflections */}
-      <Environment resolution={quality === 'low' ? 64 : 128} preset="studio" />
+      {/* Clean environment for realistic metal reflections */}
+      <Environment resolution={quality === 'low' ? 64 : 256} preset="studio" />
 
       <EnergyCan 
         scrollRotation={scrollRotation} 
@@ -27,12 +28,12 @@ export default function Scene({ quality = 'high', scrollRotation = null }: Scene
 
       {/* Soft contact shadow */}
       <ContactShadows 
-        position={[0, -1.5, 0]} 
-        opacity={0.35} 
+        position={[0, -1.45, 0]} 
+        opacity={0.4} 
         scale={6} 
-        blur={2.8} 
+        blur={2.5} 
         far={3} 
-        resolution={quality === 'low' ? 128 : 256} 
+        resolution={quality === 'low' ? 128 : 512} 
         color="#000000" 
       />
       
