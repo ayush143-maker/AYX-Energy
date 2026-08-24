@@ -3,11 +3,11 @@ import HeroCanvas from './three/HeroCanvas';
 
 export default function Hero() {
   return (
-    <section id="top" className="relative min-h-[100svh] w-full overflow-hidden flex items-center pt-24 pb-12">
+    <section id="top" className="relative min-h-[100svh] w-full overflow-hidden flex items-center pt-24 pb-12 bg-ayx-paper">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
-          {/* Left: Typography (Desktop) / Bottom (Mobile) */}
+          {/* Left: Typography */}
           <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left">
             
             <div className="hidden lg:block mb-12">
@@ -43,13 +43,13 @@ export default function Hero() {
                 Explore AYX 
                 <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
               </a>
-              <a href="#energy" className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-ayx-line text-ayx-ink font-sans font-semibold text-sm uppercase tracking-widest hover:border-ayx-ink transition-colors">
-                Discover the Formula
+              <a href="#flavors" className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-ayx-line text-ayx-ink font-sans font-semibold text-sm uppercase tracking-widest hover:border-ayx-ink transition-colors">
+                Discover the Flavors
               </a>
             </motion.div>
           </div>
 
-          {/* Right: 3D Can + Static Editorial Text */}
+          {/* Right: 3D Can */}
           <div className="order-1 lg:order-2 lg:col-span-7 relative h-[45vh] sm:h-[55vh] lg:h-[80vh] min-h-[380px] flex flex-col items-center justify-center">
             
             <div className="lg:hidden mb-4 text-center">
@@ -58,23 +58,6 @@ export default function Hero() {
 
             <div className="relative w-full h-full flex items-center justify-center">
               <HeroCanvas />
-              
-              {/* Static Editorial Text */}
-              <div className="absolute top-1/2 right-0 lg:right-12 -translate-y-1/2 hidden sm:block w-48 text-left pointer-events-none">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent mb-1">
-                  ORIGINAL
-                </div>
-                <div className="text-sm text-ayx-muted leading-relaxed border-l border-ayx-line pl-3">
-                  Clean energy for the next move.
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Static Text */}
-            <div className="sm:hidden absolute bottom-2 left-0 right-0 text-center pointer-events-none">
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent">
-                ORIGINAL — Clean energy for the next move.
-              </div>
             </div>
 
           </div>
