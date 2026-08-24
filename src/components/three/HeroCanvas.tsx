@@ -1,0 +1,42 @@
+import { Canvas } from '@react-three/fiber';
+import { Suspense, useEffect, useState } from 'react';
+import Scene from './Scene';
+import CanFallback from './CanFallback';
+import { useQuality } from '../../hooks/useQuality';
+
+export default function HeroCanvas() {
+  const [webglOk, setWebglOk] = useState(true);
+  const quality = useQuality();
+
+  useEffect(() => {
+    try {
+      const c = document.createElement('canvas');
+      const gl = c.getContext('webgl2') || c.getContext('webgl');
+      if (!gl) setWebglOk(false);
+    } catch {
+      setWebglOk(false);
+    }
+  }, []);
+
+  if (!webglOk) return <CanFallback />;
+
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 6.5], fov: 32 }}
+      dpr={quality === 'low' ? [1, 1.25] : [1, 2]}
+      gl={{
+        antialias: quality !== 'low',
+        alpha: true,
+        powerPreference: 'high-performance',
+        stencil: false,
+        depth: true,
+      }}
+      className="!absolute inset-0"
+      style={{ touchAction: 'none' }}
+    >
+      <Suspense fallback={null}>
+        <Scene quality={quality} />
+      </Suspense>
+    </Canvas>
+  );
+}
