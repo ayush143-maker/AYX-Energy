@@ -31,35 +31,38 @@ function createCanTexture(variant: string, accent: string): THREE.CanvasTexture 
   ctx.fillRect(0, 866, 2048, 1);
   ctx.globalAlpha = 1;
 
-  // Center branding block
-  const centerX = 1024;
-  const centerY = 460;
+  // Repeat branding 4 times around the can (360 degrees)
+  const panelWidth = 512;
+  for (let i = 0; i < 4; i++) {
+    const cx = i * panelWidth + panelWidth / 2;
+    const cy = 460;
 
-  ctx.textAlign = 'center';
+    ctx.textAlign = 'center';
 
-  // AYX Logo (Draw immediately with sans-serif fallback to prevent blank canvas)
-  ctx.fillStyle = '#111111';
-  ctx.font = '900 240px sans-serif';
-  ctx.fillText('AYX', centerX, centerY);
+    // AYX Logo
+    ctx.fillStyle = '#111111';
+    ctx.font = '900 180px sans-serif';
+    ctx.fillText('AYX', cx, cy);
 
-  // Subtitle
-  ctx.fillStyle = '#111111';
-  ctx.font = '600 42px sans-serif';
-  ctx.fillText('ENERGY DRINK', centerX, centerY + 65);
+    // Subtitle
+    ctx.fillStyle = '#111111';
+    ctx.font = '600 32px sans-serif';
+    ctx.fillText('ENERGY DRINK', cx, cy + 50);
 
-  // Accent Line
-  ctx.fillStyle = accent;
-  ctx.fillRect(centerX - 60, centerY + 95, 120, 4);
+    // Accent Line
+    ctx.fillStyle = accent;
+    ctx.fillRect(cx - 50, cy + 75, 100, 4);
 
-  // Variant
-  ctx.fillStyle = accent;
-  ctx.font = '700 38px sans-serif';
-  ctx.fillText(variant, centerX, centerY + 145);
+    // Variant
+    ctx.fillStyle = accent;
+    ctx.font = '700 30px sans-serif';
+    ctx.fillText(variant, cx, cy + 120);
 
-  // Volume
-  ctx.fillStyle = '#6B7280';
-  ctx.font = '500 26px sans-serif';
-  ctx.fillText('330 ML', centerX, centerY + 195);
+    // Volume
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '500 22px sans-serif';
+    ctx.fillText('330 ML', cx, cy + 160);
+  }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
@@ -88,11 +91,6 @@ export function useCanTexture(variant: string, accent: string) {
     // Immediate build to prevent blank textures
     build();
 
-    // Rebuild when fonts are ready to apply Inter font
-    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(build).catch(build);
-    }
-    
     return () => { mounted = false; };
   }, [variant, accent]);
 
