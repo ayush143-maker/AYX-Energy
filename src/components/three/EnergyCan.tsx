@@ -7,90 +7,112 @@ import { useCanTexture } from '../../hooks/useCanTexture';
 
 interface EnergyCanProps {
   followCursor?: boolean;
-  autoRotateSpeed?: number;
   rotationY?: MotionValue<number>;
-  autoRotate?: boolean;
-  position?: [number, number, number];
-  scale?: number;
   quality?: 'low' | 'medium' | 'high';
 }
 
-export default function EnergyCan({ followCursor = true, autoRotateSpeed = 0.3, rotationY, autoRotate = true, position = [0, 0, 0], scale = 1, quality = 'high' }: EnergyCanProps) {
+export default function EnergyCan({ followCursor = true, rotationY, quality = 'high' }: EnergyCanProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { mouse } = useThree();
   const reduceMotion = useReducedMotion();
-  const { map, emissive } = useCanTexture();
+  const { map } = useCanTexture();
+
   const segments = quality === 'low' ? 48 : quality === 'medium' ? 72 : 96;
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
+
     if (rotationY) {
       groupRef.current.rotation.y = rotationY.get();
-    } else if (autoRotate && !reduceMotion) {
-      groupRef.current.rotation.y += delta * autoRotateSpeed;
+    } else if (!reduceMotion) {
+      // Slow, elegant idle rotation
+      groupRef.current.rotation.y += delta * 0.15; 
     }
+
     if (followCursor && !reduceMotion) {
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, mouse.y * 0.12, 0.045);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, mouse.x * 0.06, 0.045);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, mouse.y * 0.1, 0.05);
     }
   });
 
+  // Dimensions based on 330ml slim can
+  const radius = 0.6;
+  const height = 2.8;
+
   return (
-    <group ref={groupRef} position={position} scale={scale} dispose={null}>
+    <group ref={groupRef} dispose={null}>
+      
+      {/* Main Body */}
       <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[1, 1, 2.6, segments, 1, true]} />
-        <meshStandardMaterial
+        <cylinderGeometry args={[radius, radius, height, segments, 1, true]} />
+        <meshStandardMaterial 
           map={map || undefined}
-          emissiveMap={emissive || undefined}
-          emissive={emissive ? '#ffffff' : '#000000'}
-          emissiveIntensity={0.8}
-          metalness={0.9}
-          roughness={0.35}
-          envMapIntensity={0.4} // <--- Prevents white blown-out look
+          color={map ? '#ffffff' : '#F7F7F5'}
+          metalness={0.1} 
+          roughness={0.6} 
           side={THREE.DoubleSide}
-          color={map ? '#ffffff' : '#04060a'} // <--- Dark base
         />
       </mesh>
 
-      <mesh position={[0, 1.32, 0]}>
-        <cylinderGeometry args={[1.015, 1.015, 0.08, segments]} />
-        <meshStandardMaterial color="#9fb4cc" metalness={1} roughness={0.2} envMapIntensity={1.0} />
+      {/* Shoulder Taper */}
+      <mesh position={[0, height / 2 - 0.05, 0]} castShadow>
+        <cylinderGeometry args={[radius - 0.02, radius, 0.1, segments, 1, false]} />
+        <meshStandardMaterial color="#F7F7F5" metalness={0.1} roughness={0.6} />
       </mesh>
 
-      <mesh position={[0, 1.365, 0]}>
-        <cylinderGeometry args={[0.96, 0.96, 0.02, segments]} />
-        <meshStandardMaterial color="#cfd8e3" metalness={1} roughness={0.14} envMapIntensity={1.0} />
+      {/* Neck */}
+      <mesh position={[0, height / 2 + 0.02, 0]} castShadow>
+        <cylinderGeometry args={[radius - 0.12, radius - 0.02, 0.06, segments, 1, false]} />
+        <meshStandardMaterial color="#F7F7F5" metalness={0.1} roughness={0.6} />
       </mesh>
 
-      <mesh position={[0, 1.34, 0]}>
-        <cylinderGeometry args={[0.92, 0.92, 0.04, segments, 1, true]} />
-        <meshStandardMaterial color="#0a0e16" metalness={0.6} roughness={0.4} side={THREE.DoubleSide} />
+      {/* Top Rim (Raised edge) */}
+      <mesh position={[0, height / 2 + 0.06, 0]} castShadow>
+        <cylinderGeometry args={[radius - 0.1, radius - 0.1, 0.02, segments, 1, false]} />
+        <meshStandardMaterial color="#D1D5DB" metalness={0.8} roughness={0.3} />
       </mesh>
 
-      <mesh position={[0.32, 1.375, 0]}>
-        <cylinderGeometry args={[0.18, 0.18, 0.018, 24]} />
-        <meshStandardMaterial color="#cfd8e3" metalness={1} roughness={0.18} envMapIntensity={1.0} />
+      {/* Recessed Lid */}
+      <mesh position={[0, height / 2 + 0.05, 0]} castShadow>
+        <cylinderGeometry args={[radius - 0.13, radius - 0.1, 0.015, segments, 1, false]} />
+        <meshStandardMaterial color="#E5E7EB" metalness={0.9} roughness={0.2} />
       </mesh>
 
-      <mesh position={[0.32, 1.39, 0]} rotation={[Math.PI / 2 - 0.25, 0, 0]}>
-        <torusGeometry args={[0.13, 0.022, 12, 32]} />
-        <meshStandardMaterial color="#cfd8e3" metalness={1} roughness={0.2} envMapIntensity={1.0} />
+      {/* Pull Tab Base Ring */}
+      <mesh position={[0.15, height / 2 + 0.07, 0]} rotation={[0, 0, 0]} castShadow>
+        <torusGeometry args={[0.1, 0.012, 8, 24]} />
+        <meshStandardMaterial color="#9CA3AF" metalness={0.9} roughness={0.2} />
       </mesh>
 
-      <mesh position={[0.32, 1.385, 0]}>
-        <sphereGeometry args={[0.025, 12, 12]} />
-        <meshStandardMaterial color="#9fb4cc" metalness={1} roughness={0.15} />
+      {/* Pull Tab Ring (The finger loop) */}
+      <mesh position={[0.15, height / 2 + 0.08, 0]} rotation={[Math.PI / 2 - 0.2, 0, 0]} castShadow>
+        <torusGeometry args={[0.08, 0.01, 8, 24]} />
+        <meshStandardMaterial color="#9CA3AF" metalness={0.9} roughness={0.2} />
       </mesh>
 
-      <mesh position={[0, -1.3, 0]}>
-        <cylinderGeometry args={[1.015, 0.985, 0.08, segments]} />
-        <meshStandardMaterial color="#1a1f2a" metalness={0.85} roughness={0.4} envMapIntensity={0.6} />
+      {/* Rivet */}
+      <mesh position={[0.15, height / 2 + 0.075, 0]}>
+        <sphereGeometry args={[0.015, 12, 12]} />
+        <meshStandardMaterial color="#6B7280" metalness={0.9} roughness={0.2} />
       </mesh>
 
-      <mesh position={[0, -1.335, 0]}>
-        <cylinderGeometry args={[0.94, 0.94, 0.02, segments]} />
-        <meshStandardMaterial color="#0a0e16" metalness={0.6} roughness={0.5} />
+      {/* Bottom Base */}
+      <mesh position={[0, -height / 2 + 0.02, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[radius - 0.05, radius, 0.05, segments, 1, false]} />
+        <meshStandardMaterial color="#D1D5DB" metalness={0.6} roughness={0.4} />
       </mesh>
+
+      {/* Bottom Inset */}
+      <mesh position={[0, -height / 2 + 0.01, 0]}>
+        <cylinderGeometry args={[radius - 0.15, radius - 0.05, 0.02, segments, 1, false]} />
+        <meshStandardMaterial color="#9CA3AF" metalness={0.8} roughness={0.3} />
+      </mesh>
+
+      {/* Inner Bottom (Dark inside if looked at from below) */}
+      <mesh position={[0, -height / 2 + 0.03, 0]}>
+        <cylinderGeometry args={[radius - 0.16, radius - 0.16, 0.02, segments, 1, false]} />
+        <meshStandardMaterial color="#111111" metalness={0.5} roughness={0.8} />
+      </mesh>
+
     </group>
   );
 }
