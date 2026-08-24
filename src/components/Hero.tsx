@@ -1,28 +1,35 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import HeroCanvas from './three/HeroCanvas';
+import { useState } from 'react';
+
+const quadrants = [
+  { id: 0, label: 'ORIGINAL', desc: 'Clean energy for the next move.' },
+  { id: 1, label: '330 ML', desc: 'Precision-sized for momentum.' },
+  { id: 2, label: 'FOCUS / DRIVE / ENERGY', desc: 'Designed around a simple idea: keep moving.' },
+  { id: 3, label: 'ENERGY, REFINED.', desc: 'Nothing unnecessary.' },
+];
 
 export default function Hero() {
+  const [quad, setQuad] = useState(0);
+
   return (
     <section id="top" className="relative min-h-[100svh] w-full overflow-hidden flex items-center pt-24 pb-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
-          {/* Left: Typography */}
-          <div className="order-2 lg:order-1 lg:col-span-5">
-            <motion.p 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              transition={{ delay: 0.2, duration: 0.8 }}
-              className="text-xs font-semibold uppercase tracking-[0.3em] text-ayx-accent mb-6"
-            >
-              Engineered for the next move.
-            </motion.p>
+          {/* Left: Typography (Desktop) / Bottom (Mobile) */}
+          <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left">
+            
+            <div className="hidden lg:block mb-12">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-ayx-accent mb-2">AYX / Energy Drink</p>
+              <div className="w-12 h-0.5 bg-ayx-ink"></div>
+            </div>
 
             <motion.h1 
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
               transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="font-sans font-black text-[clamp(3rem,8vw,6rem)] leading-[0.9] tracking-tight text-ayx-ink"
+              className="font-sans font-black text-[clamp(2.5rem,9vw,6rem)] leading-[0.9] tracking-tight text-ayx-ink"
             >
               ENERGY<br/>WITHOUT<br/>LIMITS.
             </motion.h1>
@@ -31,9 +38,9 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="mt-8 max-w-md text-base text-ayx-muted leading-relaxed"
+              className="mt-6 max-w-md text-base text-ayx-muted leading-relaxed"
             >
-              A precision-crafted energy drink designed for focus, momentum and relentless performance.
+              Engineered for the next move. A precision-crafted energy drink designed for focus, momentum and relentless performance.
             </motion.p>
 
             <motion.div 
@@ -52,15 +59,54 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right: 3D Can */}
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            transition={{ delay: 0.4, duration: 1.2 }}
-            className="order-1 lg:order-2 lg:col-span-7 relative h-[50vh] sm:h-[60vh] lg:h-[80vh] min-h-[400px]"
-          >
-            <HeroCanvas />
-          </motion.div>
+          {/* Right: 3D Can + Dynamic Text */}
+          <div className="order-1 lg:order-2 lg:col-span-7 relative h-[45vh] sm:h-[55vh] lg:h-[80vh] min-h-[380px] flex flex-col items-center justify-center">
+            
+            <div className="lg:hidden mb-4 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-ayx-accent">AYX / Energy Drink</p>
+            </div>
+
+            <div className="relative w-full h-full flex items-center justify-center">
+              <HeroCanvas onQuadrantChange={setQuad} />
+              
+              {/* Dynamic Editorial Text */}
+              <div className="absolute top-1/2 right-0 lg:right-12 -translate-y-1/2 hidden sm:block w-48 text-left pointer-events-none">
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={quad}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent mb-1">
+                      {quadrants[quad].label}
+                    </div>
+                    <div className="text-sm text-ayx-muted leading-relaxed border-l border-ayx-line pl-3">
+                      {quadrants[quad].desc}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Mobile Dynamic Text */}
+            <div className="sm:hidden absolute bottom-2 left-0 right-0 text-center pointer-events-none">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={quad}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-[10px] font-semibold uppercase tracking-widest text-ayx-accent"
+                >
+                  {quadrants[quad].label} — {quadrants[quad].desc}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+          </div>
 
         </div>
       </div>
