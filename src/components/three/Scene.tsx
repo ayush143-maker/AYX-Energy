@@ -1,13 +1,13 @@
 import { Environment, AdaptiveDpr, Preload, ContactShadows } from '@react-three/drei';
 import EnergyCan from './EnergyCan';
+import { MotionValue } from 'framer-motion';
 
 interface SceneProps {
   quality?: 'low' | 'medium' | 'high';
-  scrollRotation?: any;
-  onQuadrantChange?: (q: number) => void;
+  scrollRotation?: MotionValue<number> | null;
 }
 
-export default function Scene({ quality = 'high', onQuadrantChange }: SceneProps) {
+export default function Scene({ quality = 'high', scrollRotation = null }: SceneProps) {
   return (
     <>
       <AdaptiveDpr pixelated={false} />
@@ -20,7 +20,10 @@ export default function Scene({ quality = 'high', onQuadrantChange }: SceneProps
       {/* Clean environment for aluminum reflections */}
       <Environment resolution={quality === 'low' ? 64 : 128} preset="studio" />
 
-      <EnergyCan onQuadrantChange={onQuadrantChange} isInteractive={true} />
+      <EnergyCan 
+        scrollRotation={scrollRotation} 
+        isInteractive={!scrollRotation} 
+      />
 
       {/* Soft contact shadow */}
       <ContactShadows 
