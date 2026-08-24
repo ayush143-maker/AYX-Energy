@@ -31,17 +31,14 @@ export default function EnergyCan({
   // Lathe Geometry for smooth can profile
   const points = useMemo(() => {
     const pts = [];
-    // Bottom to Top
+    // Stop lathe before the top to make room for the steel rim
     pts.push(new THREE.Vector2(0.0, -1.4)); // Center bottom
     pts.push(new THREE.Vector2(0.58, -1.4)); // Bottom edge
     pts.push(new THREE.Vector2(0.62, -1.35)); // Bottom curve
     pts.push(new THREE.Vector2(0.62, 1.15)); // Straight body
     pts.push(new THREE.Vector2(0.62, 1.2)); // Shoulder start
     pts.push(new THREE.Vector2(0.6, 1.3)); // Shoulder curve
-    pts.push(new THREE.Vector2(0.52, 1.4)); // Neck
-    pts.push(new THREE.Vector2(0.54, 1.45)); // Rim outer
-    pts.push(new THREE.Vector2(0.52, 1.48)); // Rim top
-    pts.push(new THREE.Vector2(0.48, 1.48)); // Lid inner
+    pts.push(new THREE.Vector2(0.52, 1.35)); // Neck start
     return pts;
   }, []);
 
@@ -56,11 +53,11 @@ export default function EnergyCan({
       // State machine logic
       phaseTimer.current += delta;
       
-      if (phase === 0 && phaseTimer.current > 2.5) { // Hold front
+      if (phase === 0 && phaseTimer.current > 1.5) { // Faster hold front
         setPhase(1); phaseTimer.current = 0;
-      } else if (phase === 1 && phaseTimer.current > 1.5) { // Tilt
+      } else if (phase === 1 && phaseTimer.current > 1.0) { // Faster tilt
         setPhase(2); phaseTimer.current = 0;
-      } else if (phase === 2 && phaseTimer.current > 6.0) { // Turn
+      } else if (phase === 2 && phaseTimer.current > 4.0) { // Faster turn duration
         setPhase(0); phaseTimer.current = 0;
       }
 
@@ -70,14 +67,12 @@ export default function EnergyCan({
       let targetZ = groupRef.current.rotation.z;
 
       if (phase === 0) {
-        // Return to front (Y=0)
         targetY = 0; targetX = 0; targetZ = 0;
       } else if (phase === 1) {
-        // Slight tilt
         targetX = 0.08; targetZ = 0.12;
       } else if (phase === 2) {
-        // Slow continuous turn
-        targetY += delta * 0.15;
+        // MUCH FASTER ROTATION
+        targetY += delta * 1.5; 
         targetX = 0.05; targetZ = 0.05;
       }
 
@@ -121,26 +116,32 @@ export default function EnergyCan({
         />
       </mesh>
 
-      {/* Lid Top (Recessed) */}
-      <mesh position={[0, 1.475, 0]} castShadow>
-        <cylinderGeometry args={[0.48, 0.48, 0.01, 96, 1, false]} />
+      {/* Thin Steel Top Rim (The missing metallic ring) */}
+      <mesh position={[0, 1.36, 0]} castShadow>
+        <cylinderGeometry args={[0.525, 0.525, 0.06, 96, 1, false]} />
+        <meshStandardMaterial color="#D1D5DB" metalness={1.0} roughness={0.15} />
+      </mesh>
+
+      {/* Lid Top (Recessed Steel) */}
+      <mesh position={[0, 1.38, 0]} castShadow>
+        <cylinderGeometry args={[0.48, 0.48, 0.02, 96, 1, false]} />
         <meshStandardMaterial color="#E5E7EB" metalness={0.9} roughness={0.2} />
       </mesh>
 
       {/* Pull Tab Base */}
-      <mesh position={[0.15, 1.49, 0]} rotation={[0, 0, 0]} castShadow>
+      <mesh position={[0.15, 1.395, 0]} rotation={[0, 0, 0]} castShadow>
         <torusGeometry args={[0.1, 0.015, 8, 24]} />
-        <meshStandardMaterial color="#9CA3AF" metalness={0.9} roughness={0.2} />
+        <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.2} />
       </mesh>
 
       {/* Pull Tab Ring */}
-      <mesh position={[0.15, 1.5, 0]} rotation={[Math.PI / 2 - 0.2, 0, 0]} castShadow>
+      <mesh position={[0.15, 1.40, 0]} rotation={[Math.PI / 2 - 0.2, 0, 0]} castShadow>
         <torusGeometry args={[0.08, 0.012, 8, 24]} />
-        <meshStandardMaterial color="#9CA3AF" metalness={0.9} roughness={0.2} />
+        <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.2} />
       </mesh>
 
       {/* Rivet */}
-      <mesh position={[0.15, 1.495, 0]}>
+      <mesh position={[0.15, 1.395, 0]}>
         <sphereGeometry args={[0.02, 12, 12]} />
         <meshStandardMaterial color="#6B7280" metalness={0.9} roughness={0.2} />
       </mesh>
