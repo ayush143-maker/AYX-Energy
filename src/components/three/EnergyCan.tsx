@@ -1,37 +1,35 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { MotionValue } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useCanTexture } from '../../hooks/useCanTexture';
 
 interface EnergyCanProps {
   variant?: string;
   accent?: string;
-  onQuadrantChange?: (q: number) => void;
   isInteractive?: boolean;
+  scrollRotation?: MotionValue<number> | null;
 }
 
 export default function EnergyCan({ 
   variant = 'ORIGINAL', 
   accent = '#0047FF', 
-  onQuadrantChange,
-  isInteractive = true 
+  isInteractive = true,
+  scrollRotation = null
 }: EnergyCanProps) {
   const groupRef = useRef<THREE.Group>(null);
   const reduceMotion = useReducedMotion();
-  const { mouse } = useThree();
   const map = useCanTexture(variant, accent);
 
-  // Animation State Machine
-  const [phase, setPhase] = useState(0); // 0: Front, 1: Tilt, 2: Turn
-  const phaseTimer = useRef(0);
-  const touchVelocity = useRef(0);
-  const currentQuadrant = useRef(0);
+  // Drag state
+  const isDragging = useRef(false);
+  const prevPointer = useRef({ x: 0, y: 0 });
+  const velocity = useRef(0);
 
   // Lathe Geometry for smooth can profile
   const points = useMemo(() => {
     const pts = [];
-    // Stop lathe before the top to make room for the sleek steel rim
     pts.push(new THREE.Vector2(0.0, -1.4)); // Center bottom
     pts.push(new THREE.Vector2(0.58, -1.4)); // Bottom edge
     pts.push(new THREE.Vector2(0.62, -1.35)); // Bottom curve
@@ -42,69 +40,55 @@ export default function EnergyCan({
     return pts;
   }, []);
 
-  useFrame((state, delta) => {
+  // Event handlers for drag
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!isInteractive || scrollRotation) return;
+    isDragging.current = true;
+    prevPointer.current = { x: e.clientX, y: e.clientY };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDragging.current || !groupRef.current) return;
+    const deltaX = e.clientX - prevPointer.current.x;
+    velocity.current = deltaX * 0.01;
+    groupRef.current.rotation.y += velocity.current;
+    prevPointer.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    isDragging.current = false;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  };
+
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    // Touch inertia decay
-    if (Math.abs(touchVelocity.current) > 0.0001) {
-      groupRef.current.rotation.y += touchVelocity.current;
-      touchVelocity.current *= 0.92; // friction
-    } else if (isInteractive && !reduceMotion) {
-      // State machine logic
-      phaseTimer.current += delta;
-      
-      // Much faster transitions
-      if (phase === 0 && phaseTimer.current > 0.8) { 
-        setPhase(1); phaseTimer.current = 0;
-      } else if (phase === 1 && phaseTimer.current > 0.5) { 
-        setPhase(2); phaseTimer.current = 0;
-      } else if (phase === 2 && phaseTimer.current > 3.0) { 
-        setPhase(0); phaseTimer.current = 0;
-      }
-
-      // Smooth transitions based on phase
-      let targetY = groupRef.current.rotation.y;
-      let targetX = groupRef.current.rotation.x;
-      let targetZ = groupRef.current.rotation.z;
-
-      if (phase === 0) {
-        targetY = 0; targetX = 0; targetZ = 0;
-      } else if (phase === 1) {
-        targetX = 0.08; targetZ = 0.12;
-      } else if (phase === 2) {
-        // 2.5x FASTER ROTATION
-        targetY += delta * 3.0; 
-        targetX = 0.05; targetZ = 0.05;
-      }
-
-      // Snappier lerp
+    if (scrollRotation) {
+      // Scroll-driven mode (Showcase section)
+      const targetY = scrollRotation.get();
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.1);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetX, 0.1);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetZ, 0.1);
-    }
-
-    // Pointer influence (Desktop)
-    if (isInteractive && !reduceMotion && Math.abs(touchVelocity.current) < 0.0001) {
-      const targetY = mouse.x * 0.5 + groupRef.current.rotation.y;
-      const targetX = -mouse.y * 0.15 + groupRef.current.rotation.x;
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetX, 0.05);
-    }
-
-    // Quadrant calculation for dynamic text
-    if (onQuadrantChange) {
-      const y = groupRef.current.rotation.y;
-      const normalizedY = ((y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-      const quad = Math.floor(((normalizedY + Math.PI / 4) / (Math.PI / 2)) % 4);
-      
-      if (quad !== currentQuadrant.current) {
-        currentQuadrant.current = quad;
-        onQuadrantChange(quad);
+    } else if (!isDragging.current) {
+      // Idle drift + inertia (Hero section)
+      if (Math.abs(velocity.current) > 0.0001) {
+        groupRef.current.rotation.y += velocity.current;
+        velocity.current *= 0.92; // friction
+      } else if (!reduceMotion) {
+        // Very slow premium idle drift
+        groupRef.current.rotation.y += delta * 0.15;
       }
     }
   });
 
   return (
-    <group ref={groupRef} dispose={null}>
+    <group 
+      ref={groupRef} 
+      dispose={null}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+    >
       
       {/* Main Body (Lathe Geometry) */}
       <mesh castShadow receiveShadow>
