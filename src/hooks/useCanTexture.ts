@@ -24,8 +24,8 @@ function createCanTexture(variant: string, accent: string): THREE.CanvasTexture 
   // Signature horizontal wrap lines (Top and Bottom)
   ctx.fillStyle = accent;
   ctx.globalAlpha = 0.8;
-  ctx.fillRect(0, 150, 2048, 2);
-  ctx.fillRect(0, 872, 2048, 2);
+  ctx.fillRect(0, 150, 2048, 4);
+  ctx.fillRect(0, 872, 2048, 4);
   ctx.globalAlpha = 0.2;
   ctx.fillRect(0, 156, 2048, 1);
   ctx.fillRect(0, 866, 2048, 1);
@@ -37,28 +37,28 @@ function createCanTexture(variant: string, accent: string): THREE.CanvasTexture 
 
   ctx.textAlign = 'center';
 
-  // AYX Logo
+  // AYX Logo (Draw immediately with sans-serif fallback to prevent blank canvas)
   ctx.fillStyle = '#111111';
-  ctx.font = '900 240px Inter, sans-serif';
+  ctx.font = '900 240px sans-serif';
   ctx.fillText('AYX', centerX, centerY);
 
   // Subtitle
   ctx.fillStyle = '#111111';
-  ctx.font = '600 42px Inter, sans-serif';
+  ctx.font = '600 42px sans-serif';
   ctx.fillText('ENERGY DRINK', centerX, centerY + 65);
 
   // Accent Line
   ctx.fillStyle = accent;
-  ctx.fillRect(centerX - 60, centerY + 95, 120, 3);
+  ctx.fillRect(centerX - 60, centerY + 95, 120, 4);
 
   // Variant
   ctx.fillStyle = accent;
-  ctx.font = '700 38px Inter, sans-serif';
+  ctx.font = '700 38px sans-serif';
   ctx.fillText(variant, centerX, centerY + 145);
 
   // Volume
   ctx.fillStyle = '#6B7280';
-  ctx.font = '500 26px Inter, sans-serif';
+  ctx.font = '500 26px sans-serif';
   ctx.fillText('330 ML', centerX, centerY + 195);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -85,11 +85,12 @@ export function useCanTexture(variant: string, accent: string) {
       setMap(tex);
     };
 
+    // Immediate build to prevent blank textures
+    build();
+
+    // Rebuild when fonts are ready to apply Inter font
     if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
       document.fonts.ready.then(build).catch(build);
-    } else {
-      const t = setTimeout(build, 600);
-      return () => { mounted = false; clearTimeout(t); };
     }
     
     return () => { mounted = false; };
