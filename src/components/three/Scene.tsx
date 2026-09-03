@@ -11,37 +11,30 @@ export default function Scene({ quality = 'high', scrollRotation = null }: Scene
   return (
     <>
       <AdaptiveDpr pixelated={false} />
-
       {/* Premium Studio Lighting */}
       <ambientLight intensity={0.9} />
       <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
       <spotLight position={[-5, 5, 5]} intensity={1.0} angle={0.5} penumbra={1} color="#ffffff" />
-      
-      {/* Clean environment for realistic, non-chrome reflections */}
+      {/* Rim light – makes aluminum edges + droplets sparkle */}
+      <directionalLight position={[-6, 3, -6]} intensity={1.1} color="#ffffff" />
       <Environment resolution={quality === 'low' ? 64 : 256} preset="studio" />
-
-      <EnergyCan 
-        scrollRotation={scrollRotation} 
-        isInteractive={!scrollRotation} 
+      <EnergyCan
+        scrollRotation={scrollRotation}
+        isInteractive={!scrollRotation}
+        quality={quality}
       />
-
-      {/* 
-        Replaced ContactShadows with a simple soft radial gradient plane 
-        to completely eliminate the "globe" artifact underneath the can.
-      */}
+      {/* Soft radial shadow plane (no "globe" artifact) */}
       <mesh position={[0, -1.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[6, 6]} />
         <meshBasicMaterial transparent opacity={0.15} depthWrite={false}>
           <canvasTexture attach="map" image={createShadowCanvas()} />
         </meshBasicMaterial>
       </mesh>
-      
       <Preload all />
     </>
   );
 }
 
-// Helper to generate a soft circular shadow texture
 function createShadowCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
