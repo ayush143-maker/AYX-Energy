@@ -1,9 +1,12 @@
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MotionValue } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useCanTexture } from '../../hooks/useCanTexture';
+import { useCondensationMaps } from '../../hooks/useCondensationMaps';
+import FrostShell from './FrostShell';
+import Condensation from './Condensation';
 
 interface EnergyCanProps {
   variant?: string;
@@ -17,65 +20,9 @@ interface EnergyCanProps {
 
 const R = 0.55;
 const H = 2.55;
-
-// Only a few LIVE sliding beads – the frost film is baked into the label
-const LIVE_BEADS: Record<string, number> = { low: 0, medium: 8, high: 14 };
+const LIVE_BEADS: Record<string, number> = { low: 0, medium: 10, high: 18 };
 const INTRO_DURATION = 3.2;
 const START_Y = -Math.PI * 2 * 1.4;
-
-/* --------- live sliding beads (refractive water) --------- */
-function LiveBeads({ radius, height, count }: { radius: number; height: number; count: number }) {
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  const drops = useMemo(
-    () =>
-      Array.from({ length: count }, () => ({
-        theta: Math.random() * Math.PI * 2,
-        y: (Math.random() - 0.5) * (height - 0.4),
-        r: 0.012 + Math.random() * 0.009,
-        speed: 0.02 + Math.random() * 0.045,
-        wobble: Math.random() * Math.PI * 2,
-      })),
-    [count, height]
-  );
-
-  useFrame((state, delta) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    for (let i = 0; i < drops.length; i++) {
-      const d = drops[i];
-      d.y -= delta * d.speed;
-      d.theta += Math.sin(t * 1.5 + d.wobble) * delta * 0.04;
-      if (d.y < -height / 2 + 0.15) {
-        d.y = height / 2 - 0.3;
-        d.theta = Math.random() * Math.PI * 2;
-      }
-      const rr = radius + d.r * 0.3;
-      dummy.position.set(Math.sin(d.theta) * rr, d.y, Math.cos(d.theta) * rr);
-      dummy.rotation.set(0, d.theta, 0);
-      dummy.scale.set(d.r, d.r * 1.45, d.r * 0.45); // gravity-stretched bead
-      dummy.updateMatrix();
-      ref.current.setMatrixAt(i, dummy.matrix);
-    }
-    ref.current.instanceMatrix.needsUpdate = true;
-  });
-
-  return (
-    <instancedMesh ref={ref} args={[undefined, undefined, count] as any} frustumCulled={false}>
-      <sphereGeometry args={[1, 12, 12]} />
-      <meshPhysicalMaterial
-        transmission={1}
-        thickness={0.05}
-        roughness={0.03}
-        ior={1.33}
-        clearcoat={1}
-        clearcoatRoughness={0.02}
-        envMapIntensity={1.6}
-      />
-    </instancedMesh>
-  );
-}
 
 export default function EnergyCan({
   variant = 'ORIGINAL',
@@ -89,6 +36,7 @@ export default function EnergyCan({
   const groupRef = useRef<THREE.Group>(null);
   const reduceMotion = useReducedMotion();
   const map = useCanTexture(variant, accent);
+  const { bumpMap, roughMap } = useCondensationMaps(quality !== 'low');
 
   const isDragging = useRef(false);
   const prevPointer = useRef({ x: 0, y: 0 });
@@ -167,14 +115,17 @@ export default function EnergyCan({
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
     >
-      {/* Main Body – glossy printed aluminum */}
+      {/* Main Body – printed aluminum + live sweat (bump/roughness buildup) */}
       <mesh castShadow receiveShadow>
         <cylinderGeometry args={[R, R, H, 96, 1, false]} />
         <meshPhysicalMaterial
           map={map || undefined}
           color={map ? '#ffffff' : '#F9FAFB'}
           metalness={0.55}
-          roughness={0.34}
+          roughness={1}
+          roughnessMap={roughMap}
+          bumpMap={bumpMap}
+          bumpScale={0.02}
           clearcoat={0.9}
           clearcoatRoughness={0.18}
           envMapIntensity={1.0}
@@ -221,8 +172,13 @@ export default function EnergyCan({
         <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.3} side={THREE.BackSide} />
       </mesh>
 
-      {/* Few live sliding beads over the baked frost */}
-      {beadCount > 0 && <LiveBeads radius={R} height={H} count={beadCount} />}
+      {/* LAYER: procedural frost mist shell */}
+      {quality !== 'low' && (
+        <FrostShell radius={R} height={H} intensity={quality === 'high' ? 1 : 0.7} />
+      )}
+
+      {/* LAYER: live sliding beads + wet trails */}
+      {beadCount > 0 && <Condensation radius={R} height={H} count={beadCount} />}
     </group>
   );
 }
