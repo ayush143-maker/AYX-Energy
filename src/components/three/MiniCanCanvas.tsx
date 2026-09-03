@@ -42,13 +42,19 @@ export default function MiniCanCanvas({ variant, accent }: Props) {
         className="!absolute inset-0"
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.9} />
-          <directionalLight position={[3, 5, 5]} intensity={1.2} />
-          <directionalLight position={[-4, 2, -4]} intensity={0.7} />
+          <ambientLight intensity={0.85} />
+          <directionalLight position={[3, 5, 5]} intensity={1.3} />
+          <directionalLight position={[-4, 2, -4]} intensity={0.8} />
           <Environment preset="studio" />
-          {/* Smaller, nicely framed can */}
-          <group rotation={[0, Math.PI / 7, 0]} scale={0.62}>
-            <EnergyCan variant={variant} accent={accent} isInteractive={false} quality={quality} />
+          <group rotation={[0, 0, 0.05]} scale={0.62}>
+            <EnergyCan
+              variant={variant}
+              accent={accent}
+              isInteractive={false}
+              autoRotate
+              rotationSpeed={0.5}
+              quality={quality}
+            />
           </group>
           <ContactShadows position={[0, -0.98, 0]} opacity={0.3} scale={3} blur={2.5} far={1.6} />
         </Suspense>
