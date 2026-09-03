@@ -11,19 +11,19 @@ export default function Scene({ quality = 'high', scrollRotation = null }: Scene
   return (
     <>
       <AdaptiveDpr pixelated={false} />
-      {/* Premium Studio Lighting */}
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
+      <ambientLight intensity={0.7} />
+      {/* key – creates the vertical specular streak on aluminum */}
+      <directionalLight position={[2, 6, 7]} intensity={2.0} color="#ffffff" />
+      <directionalLight position={[5, 8, 5]} intensity={1.4} color="#ffffff" />
       <spotLight position={[-5, 5, 5]} intensity={1.0} angle={0.5} penumbra={1} color="#ffffff" />
-      {/* Rim light – makes aluminum edges + droplets sparkle */}
-      <directionalLight position={[-6, 3, -6]} intensity={1.1} color="#ffffff" />
+      {/* rim – droplet sparkle + edge separation */}
+      <directionalLight position={[-6, 3, -6]} intensity={1.3} color="#ffffff" />
       <Environment resolution={quality === 'low' ? 64 : 256} preset="studio" />
       <EnergyCan
         scrollRotation={scrollRotation}
         isInteractive={!scrollRotation}
         quality={quality}
       />
-      {/* Soft radial shadow plane (no "globe" artifact) */}
       <mesh position={[0, -1.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[6, 6]} />
         <meshBasicMaterial transparent opacity={0.15} depthWrite={false}>
