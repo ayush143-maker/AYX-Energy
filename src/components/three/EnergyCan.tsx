@@ -15,43 +15,28 @@ interface EnergyCanProps {
   rotationSpeed?: number;
 }
 
-// Real 330ml slim-can proportions
 const R = 0.55;
 const H = 2.55;
 
-const DROPLETS: Record<string, number> = { low: 0, medium: 90, high: 150 };
+// Only a few LIVE sliding beads – the frost film is baked into the label
+const LIVE_BEADS: Record<string, number> = { low: 0, medium: 8, high: 14 };
 const INTRO_DURATION = 3.2;
 const START_Y = -Math.PI * 2 * 1.4;
 
-/* ------------- Realistic condensation (refractive water) ------------- */
-function Condensation({
-  radius,
-  height,
-  count,
-  premium,
-}: {
-  radius: number;
-  height: number;
-  count: number;
-  premium: boolean;
-}) {
+/* --------- live sliding beads (refractive water) --------- */
+function LiveBeads({ radius, height, count }: { radius: number; height: number; count: number }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
   const drops = useMemo(
     () =>
-      Array.from({ length: count }, () => {
-        const big = Math.random() < 0.15;
-        return {
-          theta: Math.random() * Math.PI * 2,
-          y: (Math.random() - 0.5) * (height - 0.25),
-          r: big ? 0.014 + Math.random() * 0.009 : 0.0045 + Math.random() * 0.007,
-          slide: big && Math.random() < 0.7,
-          speed: 0.035 + Math.random() * 0.07,
-          wobble: Math.random() * Math.PI * 2,
-          squash: 0.85 + Math.random() * 0.4,
-        };
-      }),
+      Array.from({ length: count }, () => ({
+        theta: Math.random() * Math.PI * 2,
+        y: (Math.random() - 0.5) * (height - 0.4),
+        r: 0.012 + Math.random() * 0.009,
+        speed: 0.02 + Math.random() * 0.045,
+        wobble: Math.random() * Math.PI * 2,
+      })),
     [count, height]
   );
 
@@ -60,18 +45,16 @@ function Condensation({
     const t = state.clock.elapsedTime;
     for (let i = 0; i < drops.length; i++) {
       const d = drops[i];
-      if (d.slide) {
-        d.y -= delta * d.speed;
-        d.theta += Math.sin(t * 1.5 + d.wobble) * delta * 0.04;
-        if (d.y < -height / 2 + 0.12) {
-          d.y = height / 2 - 0.25;
-          d.theta = Math.random() * Math.PI * 2;
-        }
+      d.y -= delta * d.speed;
+      d.theta += Math.sin(t * 1.5 + d.wobble) * delta * 0.04;
+      if (d.y < -height / 2 + 0.15) {
+        d.y = height / 2 - 0.3;
+        d.theta = Math.random() * Math.PI * 2;
       }
-      const rr = radius + d.r * 0.3; // embed into surface (no floating)
+      const rr = radius + d.r * 0.3;
       dummy.position.set(Math.sin(d.theta) * rr, d.y, Math.cos(d.theta) * rr);
       dummy.rotation.set(0, d.theta, 0);
-      dummy.scale.set(d.r, d.r * (d.slide ? 1.45 : d.squash), d.r * 0.45); // flattened bead
+      dummy.scale.set(d.r, d.r * 1.45, d.r * 0.45); // gravity-stretched bead
       dummy.updateMatrix();
       ref.current.setMatrixAt(i, dummy.matrix);
     }
@@ -81,33 +64,19 @@ function Condensation({
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, count] as any} frustumCulled={false}>
       <sphereGeometry args={[1, 12, 12]} />
-      {premium ? (
-        /* Real water: refracts the label behind it */
-        <meshPhysicalMaterial
-          transmission={1}
-          thickness={0.05}
-          roughness={0.03}
-          ior={1.33}
-          clearcoat={1}
-          clearcoatRoughness={0.02}
-          envMapIntensity={1.6}
-        />
-      ) : (
-        /* Cheap fallback for weak GPUs */
-        <meshPhysicalMaterial
-          transparent
-          opacity={0.18}
-          roughness={0.05}
-          clearcoat={1}
-          envMapIntensity={1.4}
-          depthWrite={false}
-        />
-      )}
+      <meshPhysicalMaterial
+        transmission={1}
+        thickness={0.05}
+        roughness={0.03}
+        ior={1.33}
+        clearcoat={1}
+        clearcoatRoughness={0.02}
+        envMapIntensity={1.6}
+      />
     </instancedMesh>
   );
 }
 
-/* ------------------------------ Can ------------------------------ */
 export default function EnergyCan({
   variant = 'ORIGINAL',
   accent = '#0047FF',
@@ -157,7 +126,6 @@ export default function EnergyCan({
     }
 
     if (isInteractive) {
-      // Hero: tilted spin-in, settles perfectly straight
       if (!initialized.current) {
         initialized.current = true;
         if (!reduceMotion) g.rotation.set(0.12, START_Y, 0.3);
@@ -183,13 +151,12 @@ export default function EnergyCan({
       return;
     }
 
-    // Flavor cards: slow premium turntable spin
     if (autoRotate && !reduceMotion) {
       g.rotation.y += delta * rotationSpeed;
     }
   });
 
-  const dropCount = DROPLETS[quality];
+  const beadCount = LIVE_BEADS[quality];
 
   return (
     <group
@@ -219,27 +186,22 @@ export default function EnergyCan({
         <cylinderGeometry args={[R - 0.06, R, 0.1, 96, 1, false]} />
         <meshStandardMaterial color="#CFD3D8" metalness={1.0} roughness={0.28} envMapIntensity={1.3} />
       </mesh>
-      {/* Thin Steel Top Rim */}
       <mesh position={[0, H / 2 + 0.11, 0]} castShadow>
         <cylinderGeometry args={[R - 0.05, R - 0.05, 0.02, 96, 1, false]} />
         <meshStandardMaterial color="#E8EAEE" metalness={1.0} roughness={0.15} envMapIntensity={1.5} />
       </mesh>
-      {/* Lid Top (Recessed Steel) */}
       <mesh position={[0, H / 2 + 0.105, 0]} castShadow>
         <cylinderGeometry args={[R - 0.07, R - 0.07, 0.015, 96, 1, false]} />
         <meshStandardMaterial color="#DFE2E7" metalness={0.95} roughness={0.25} envMapIntensity={1.3} />
       </mesh>
-      {/* Pull Tab Base */}
       <mesh position={[0.14, H / 2 + 0.12, 0]} castShadow>
         <torusGeometry args={[0.1, 0.015, 8, 24]} />
         <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.2} />
       </mesh>
-      {/* Pull Tab Ring */}
       <mesh position={[0.14, H / 2 + 0.13, 0]} rotation={[Math.PI / 2 - 0.3, 0, 0]} castShadow>
         <torusGeometry args={[0.08, 0.012, 8, 24]} />
         <meshStandardMaterial color="#E5E7EB" metalness={1.0} roughness={0.1} />
       </mesh>
-      {/* Rivet */}
       <mesh position={[0.14, H / 2 + 0.12, 0]}>
         <sphereGeometry args={[0.02, 12, 12]} />
         <meshStandardMaterial color="#6B7280" metalness={0.9} roughness={0.2} />
@@ -250,21 +212,17 @@ export default function EnergyCan({
         <cylinderGeometry args={[R, R - 0.06, 0.1, 96, 1, false]} />
         <meshStandardMaterial color="#CFD3D8" metalness={1.0} roughness={0.28} envMapIntensity={1.3} />
       </mesh>
-      {/* Outer Bottom Rim */}
       <mesh position={[0, -H / 2 - 0.11, 0]} receiveShadow>
         <cylinderGeometry args={[R - 0.05, R - 0.05, 0.02, 96, 1, false]} />
         <meshStandardMaterial color="#D1D5DB" metalness={1.0} roughness={0.2} />
       </mesh>
-      {/* Concave Bottom */}
       <mesh position={[0, -H / 2 - 0.08, 0]} scale={[1, 0.15, 1]}>
         <sphereGeometry args={[R - 0.09, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial color="#9CA3AF" metalness={1.0} roughness={0.3} side={THREE.BackSide} />
       </mesh>
 
-      {/* Condensation – real refractive water beads */}
-      {dropCount > 0 && (
-        <Condensation radius={R} height={H} count={dropCount} premium={quality !== 'low'} />
-      )}
+      {/* Few live sliding beads over the baked frost */}
+      {beadCount > 0 && <LiveBeads radius={R} height={H} count={beadCount} />}
     </group>
   );
 }
